@@ -231,7 +231,7 @@ export default function DietScreen() {
         )}
 
         {/* AI MEAL ASSISTANT CARD */}
-        <View style={tw`mb-6 p-5 rounded-2xl bg-gradient-to-br ${isDark ? 'from-blue-950 to-slate-900 border border-blue-900/30' : 'from-blue-50 to-indigo-100/50 border border-blue-100'} shadow-sm`}>
+        <View style={tw`mb-6 p-5 rounded-2xl ${isDark ? 'bg-blue-950/20 border border-blue-900/30' : 'bg-blue-50/50 border border-blue-100'} shadow-sm`}>
           <View style={tw`flex-row items-center mb-3.5`}>
             <MaterialIcons name="psychology" size={24} color="#3B82F6" style={tw`mr-2`} />
             <Text style={tw`text-base font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>

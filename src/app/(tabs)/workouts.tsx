@@ -451,7 +451,7 @@ export default function WorkoutsScreen() {
                               key={sec}
                               onPress={() => startTimer(sec)}
                               style={tw`px-2.5 py-1 rounded-md ${
-                                isDark ? 'bg-gray-850' : 'bg-gray-100'
+                                isDark ? 'bg-gray-800' : 'bg-gray-100'
                               }`}
                             >
                               <Text style={tw`text-xs font-semibold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>

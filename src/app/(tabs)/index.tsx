@@ -194,7 +194,7 @@ export default function DashboardScreen() {
 
         {/* Plan Header Card */}
         {activeProfile && (
-          <View style={tw`mb-6 p-4 rounded-2xl bg-gradient-to-r ${isDark ? 'from-slate-900 to-slate-950 border border-gray-800' : 'from-blue-600 to-indigo-700'} shadow-md`}>
+          <View style={tw`mb-6 p-4 rounded-2xl ${isDark ? 'bg-slate-900 border border-gray-800' : 'bg-blue-600'} shadow-md`}>
             <Text style={tw`text-xs font-bold tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-100'} uppercase mb-1`}>
               Current Split Program
             </Text>
@@ -358,7 +358,7 @@ export default function DashboardScreen() {
                   <View style={tw`w-6 h-6 rounded-md border-2 items-center justify-center ${
                     completed 
                       ? 'bg-emerald-500 border-emerald-500' 
-                      : isDark ? 'border-gray-750 bg-gray-950' : 'border-gray-300 bg-white'
+                      : isDark ? 'border-gray-800 bg-gray-950' : 'border-gray-300 bg-white'
                   }`}>
                     {completed && <MaterialIcons name="check" size={16} color="#FFFFFF" />}
                   </View>
