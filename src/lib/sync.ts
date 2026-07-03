@@ -11,23 +11,24 @@ async function syncQueueItem(item: SyncQueueItem): Promise<boolean> {
 
   const { table, action, recordId, data } = item;
 
-  // Map local table names to Supabase tables
-  // We use lowercase table names in Supabase (workouts, meals, habits, metrics)
   try {
+    // Map table names if they differ, but we kept them lowercase and matching
+    // local fields in our SQL migration.
+    const tableName = table === 'custom_habits' ? 'custom_habits' :
+                    table === 'workout_splits' ? 'workout_splits' : table;
+
     if (action === 'create') {
-      // Upsert the data. Since we generate UUIDs locally, we can insert directly.
-      // Remove syncStatus before saving to Supabase
+      // Remove syncStatus before saving to Supabase if it exists
       const { syncStatus, ...supabaseData } = data;
       
-      // Map properties if needed (e.g. for habits table, or standard fields)
       const { error } = await supabase
-        .from(table)
+        .from(tableName)
         .upsert({ ...supabaseData, id: recordId });
 
       if (error) throw error;
     } else if (action === 'delete') {
       const { error } = await supabase
-        .from(table)
+        .from(tableName)
         .delete()
         .eq('id', recordId);
 
@@ -70,7 +71,7 @@ export async function runSync() {
         // Clear from queue
         store.clearSyncQueueItem(item.id);
         
-        // Update local item status to 'synced' if it was a create action and still exists
+        // Update local item status to 'synced' if it has a syncStatus property
         if (item.action === 'create') {
           if (item.table === 'workouts') {
             useAppStore.setState((s) => ({
@@ -102,7 +103,18 @@ export async function runSync() {
     }
 
     // 2. Pull fresh data from server
-    const [workoutsResponse, mealsResponse, habitsResponse, metricsResponse] = await Promise.all([
+    const [
+      profilesRes,
+      customHabitsRes,
+      splitsRes,
+      workoutsRes,
+      mealsRes,
+      habitsRes,
+      metricsRes
+    ] = await Promise.all([
+      supabase.from('profiles').select('*').limit(20),
+      supabase.from('custom_habits').select('*').limit(100),
+      supabase.from('workout_splits').select('*').limit(50),
       supabase.from('workouts').select('*').order('date', { ascending: false }).limit(100),
       supabase.from('meals').select('*').order('date', { ascending: false }).limit(100),
       supabase.from('habits').select('*').order('date', { ascending: false }).limit(200),
@@ -112,17 +124,26 @@ export async function runSync() {
     // Check errors and merge if successful
     const pulledData: Parameters<typeof store.mergeServerData>[0] = {};
 
-    if (!workoutsResponse.error && workoutsResponse.data) {
-      pulledData.workouts = workoutsResponse.data;
+    if (!profilesRes.error && profilesRes.data) {
+      pulledData.profiles = profilesRes.data;
     }
-    if (!mealsResponse.error && mealsResponse.data) {
-      pulledData.meals = mealsResponse.data;
+    if (!customHabitsRes.error && customHabitsRes.data) {
+      pulledData.custom_habits = customHabitsRes.data;
     }
-    if (!habitsResponse.error && habitsResponse.data) {
-      pulledData.habits = habitsResponse.data;
+    if (!splitsRes.error && splitsRes.data) {
+      pulledData.workout_splits = splitsRes.data;
     }
-    if (!metricsResponse.error && metricsResponse.data) {
-      pulledData.metrics = metricsResponse.data;
+    if (!workoutsRes.error && workoutsRes.data) {
+      pulledData.workouts = workoutsRes.data;
+    }
+    if (!mealsRes.error && mealsRes.data) {
+      pulledData.meals = mealsRes.data;
+    }
+    if (!habitsRes.error && habitsRes.data) {
+      pulledData.habits = habitsRes.data;
+    }
+    if (!metricsRes.error && metricsRes.data) {
+      pulledData.metrics = metricsRes.data;
     }
 
     store.mergeServerData(pulledData);

@@ -6,7 +6,7 @@ import { useAppStore } from '@/lib/store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LineChart } from 'react-native-chart-kit';
 
-// Demo data for preview
+// Demo data for preview (target curves)
 const DEMO_WEIGHT = [70.0, 69.2, 68.5, 67.8, 67.2, 66.8];
 const DEMO_PUSHUPS = [15, 18, 22, 26, 32, 38];
 const DEMO_WAIST = [34, 33.5, 32.8, 32.0, 31.2, 30.5];
@@ -16,7 +16,13 @@ export default function MetricsScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   
-  const { metrics, addMetric, deleteMetric } = useAppStore();
+  const {
+    profiles,
+    activeProfileId,
+    metrics,
+    addMetric,
+    deleteMetric
+  } = useAppStore();
 
   const [weightInput, setWeightInput] = useState('');
   const [waistInput, setWaistInput] = useState('');
@@ -26,17 +32,25 @@ export default function MetricsScreen() {
   const [selectedChartType, setSelectedChartType] = useState<'weight' | 'pushups' | 'waist'>('weight');
   const [useDemoData, setUseDemoData] = useState(true);
 
-  // Group metrics chronologically
+  // Active Profile details
+  const activeProfile = useMemo(() => {
+    return profiles.find(p => p.id === activeProfileId) || profiles[0];
+  }, [profiles, activeProfileId]);
+
+  // Scoped metrics chronologically
   const sortedMetrics = useMemo(() => {
-    return [...metrics].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [metrics]);
+    if (!activeProfile) return [];
+    return [...metrics]
+      .filter(m => m.profileId === activeProfile.id)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [metrics, activeProfile]);
 
   // Determine if user has actual data for the selected chart
   const userChartData = useMemo(() => {
     const labels: string[] = [];
     const dataPoints: number[] = [];
 
-    sortedMetrics.forEach((m, idx) => {
+    sortedMetrics.forEach((m) => {
       const dateLabel = new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       
       if (selectedChartType === 'weight' && m.weight !== undefined) {
@@ -53,7 +67,6 @@ export default function MetricsScreen() {
 
     // Only return data if we have at least 2 data points for visualization
     if (dataPoints.length >= 2) {
-      // Limit to last 6 entries for clarity
       const limit = 6;
       return {
         labels: labels.slice(-limit),
@@ -84,6 +97,7 @@ export default function MetricsScreen() {
   }, [userChartData, useDemoData, selectedChartType]);
 
   const handleLogMetric = () => {
+    if (!activeProfile) return;
     const weight = parseFloat(weightInput);
     const waist = parseFloat(waistInput);
     const pushups = parseInt(pushupsInput);
@@ -100,65 +114,34 @@ export default function MetricsScreen() {
       pushUps: isNaN(pushups) ? undefined : pushups
     });
 
-    // Reset inputs
     setWeightInput('');
     setWaistInput('');
     setPushupsInput('');
     
-    // Auto disable demo data so user sees their new entry
+    // Auto switch to actual user data when they log something
     setUseDemoData(false);
-    
-    Alert.alert('Metrics Logged', 'Your metrics have been logged successfully!');
-  };
-
-  const isSunday = new Date().getDay() === 0;
-
-  const chartWidth = Dimensions.get('window').width - 48;
-
-  const chartConfig = {
-    backgroundColor: isDark ? '#111827' : '#FFFFFF',
-    backgroundGradientFrom: isDark ? '#1F2937' : '#F3F4F6',
-    backgroundGradientTo: isDark ? '#111827' : '#FFFFFF',
-    decimalPlaces: selectedChartType === 'weight' || selectedChartType === 'waist' ? 1 : 0,
-    color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`, // Blue
-    labelColor: (opacity = 1) => isDark ? `rgba(156, 163, 175, ${opacity})` : `rgba(75, 85, 99, ${opacity})`,
-    style: {
-      borderRadius: 16
-    },
-    propsForDots: {
-      r: '5',
-      strokeWidth: '2',
-      stroke: '#3B82F6'
-    }
+    Alert.alert('Logged!', 'Your metrics have been logged successfully.');
   };
 
   return (
     <SafeAreaView style={tw`flex-1 ${isDark ? 'bg-gray-950' : 'bg-gray-50'}`}>
-      <ScrollView contentContainerStyle={tw`p-4 pb-12`}>
-        {/* Sunday Logger Prompt */}
-        {isSunday && (
-          <View style={tw`mb-6 p-4 rounded-2xl bg-blue-600 shadow-sm flex-row items-center justify-between`}>
-            <View style={tw`flex-1 pr-4`}>
-              <Text style={tw`text-white text-base font-bold`}>
-                It's Sunday!
-              </Text>
-              <Text style={tw`text-blue-100 text-xs mt-1`}>
-                Time for your weekly Sunday tracking: log your push-up max and waist measurement.
-              </Text>
-            </View>
-            <MaterialIcons name="event" size={32} color="#FFFFFF" opacity={0.8} />
-          </View>
-        )}
-
-        {/* Input Card */}
-        <View style={tw`mb-6 p-4 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
-          <Text style={tw`text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Log Metrics
+      <ScrollView contentContainerStyle={tw`p-5 pb-10`}>
+        {/* Header */}
+        <View style={tw`mb-6`}>
+          <Text style={tw`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Body Metrics
           </Text>
-          <Text style={tw`text-xs mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            Track weight daily. Push-up max & waist measurements are recommended weekly on Sundays.
+          <Text style={tw`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            Track weight, waist sizes, and maximum push-up counts
           </Text>
+        </View>
 
+        {/* Log Metric Form Card */}
+        <View style={tw`mb-6 p-5 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+          <Text style={tw`text-base font-extrabold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>
+            Log Body Specs
+          </Text>
+          
           <View style={tw`flex-row gap-2 mb-4`}>
             <View style={tw`flex-1`}>
               <Text style={tw`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -272,75 +255,76 @@ export default function MetricsScreen() {
             })}
           </View>
 
-          {/* The Chart */}
-          <View style={tw`items-center my-2`}>
-            <LineChart
-              data={chartData}
-              width={chartWidth}
-              height={220}
-              chartConfig={chartConfig}
-              bezier
-              style={tw`rounded-xl`}
-            />
-          </View>
-
-          <Text style={tw`text-[11px] italic mt-3 text-center ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-            Tip: Consistent Sunday weight, waist, and push-up logs yield the most accurate timeline trends.
-          </Text>
+          {/* Line Chart */}
+          <LineChart
+            data={chartData}
+            width={Dimensions.get('window').width - 56}
+            height={200}
+            chartConfig={{
+              backgroundColor: isDark ? '#1F2937' : '#FFFFFF',
+              backgroundGradientFrom: isDark ? '#111827' : '#FFFFFF',
+              backgroundGradientTo: isDark ? '#1F2937' : '#FFFFFF',
+              decimalPlaces: 1,
+              color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+              labelColor: (opacity = 1) => isDark ? `rgba(156, 163, 175, ${opacity})` : `rgba(75, 85, 99, ${opacity})`,
+              style: {
+                borderRadius: 16
+              },
+              propsForDots: {
+                r: '5',
+                strokeWidth: '2',
+                stroke: '#3B82F6'
+              }
+            }}
+            bezier
+            style={tw`my-2 rounded-xl`}
+          />
         </View>
 
-        {/* History List */}
-        <View style={tw`p-4 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
-          <Text style={tw`text-base font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Log History
+        {/* Scoped Logged History List */}
+        <View style={tw`p-5 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+          <Text style={tw`text-base font-extrabold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
+            Logged Specifications History
           </Text>
-
-          {metrics.length > 0 ? (
-            [...metrics]
-              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-              .map((m) => (
-                <View
-                  key={m.id}
-                  style={tw`flex-row justify-between items-center py-3 border-b ${
-                    isDark ? 'border-gray-800' : 'border-gray-100'
-                  } last:border-b-0`}
-                >
-                  <View style={tw`flex-1`}>
-                    <Text style={tw`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                      {new Date(m.date).toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </Text>
-                    <View style={tw`flex-row gap-3 mt-1`}>
-                      {m.weight !== undefined && (
-                        <Text style={tw`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                          Weight: <Text style={tw`font-bold`}>{m.weight} kg</Text>
-                        </Text>
-                      )}
-                      {m.waist !== undefined && (
-                        <Text style={tw`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                          Waist: <Text style={tw`font-bold`}>{m.waist} in</Text>
-                        </Text>
-                      )}
-                      {m.pushUps !== undefined && (
-                        <Text style={tw`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                          Pushups Max: <Text style={tw`font-bold`}>{m.pushUps}</Text>
-                        </Text>
-                      )}
-                    </View>
+          
+          {sortedMetrics.length > 0 ? (
+            [...sortedMetrics].reverse().map((m) => (
+              <View 
+                key={m.id} 
+                style={tw`flex-row justify-between items-center py-3.5 border-b ${
+                  isDark ? 'border-gray-800' : 'border-gray-100'
+                } last:border-b-0`}
+              >
+                <View style={tw`flex-1`}>
+                  <Text style={tw`text-sm font-bold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
+                    {new Date(m.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                  </Text>
+                  <View style={tw`flex-row flex-wrap gap-2.5 mt-1`}>
+                    {m.weight !== undefined && (
+                      <View style={tw`bg-blue-500/10 px-2 py-0.5 rounded-md`}>
+                        <Text style={tw`text-[10px] font-bold text-blue-500`}>Weight: {m.weight} kg</Text>
+                      </View>
+                    )}
+                    {m.waist !== undefined && (
+                      <View style={tw`bg-purple-500/10 px-2 py-0.5 rounded-md`}>
+                        <Text style={tw`text-[10px] font-bold text-purple-500`}>Waist: {m.waist} in</Text>
+                      </View>
+                    )}
+                    {m.pushUps !== undefined && (
+                      <View style={tw`bg-emerald-500/10 px-2 py-0.5 rounded-md`}>
+                        <Text style={tw`text-[10px] font-bold text-emerald-500`}>Pushups Max: {m.pushUps}</Text>
+                      </View>
+                    )}
                   </View>
-                  
-                  <TouchableOpacity onPress={() => deleteMetric(m.id)}>
-                    <MaterialIcons name="delete-outline" size={18} color="#EF4444" />
-                  </TouchableOpacity>
                 </View>
-              ))
+                <TouchableOpacity onPress={() => deleteMetric(m.id)} style={tw`p-1`}>
+                  <MaterialIcons name="delete-outline" size={20} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            ))
           ) : (
-            <Text style={tw`text-xs italic ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              No history logs found. Record your stats above to start building your trend line.
+            <Text style={tw`text-xs italic text-gray-500 text-center py-4`}>
+              No history entries found.
             </Text>
           )}
         </View>

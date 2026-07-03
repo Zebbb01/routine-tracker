@@ -21,7 +21,13 @@ export default function DietScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const { meals, addMeal, deleteMeal } = useAppStore();
+  const {
+    profiles,
+    activeProfileId,
+    meals,
+    addMeal,
+    deleteMeal
+  } = useAppStore();
 
   // Custom meal input states
   const [foodName, setFoodName] = useState('');
@@ -29,6 +35,11 @@ export default function DietScreen() {
   const [caloriesInput, setCaloriesInput] = useState('');
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   const [showCustomForm, setShowCustomForm] = useState(false);
+
+  // Active Profile details
+  const activeProfile = useMemo(() => {
+    return profiles.find(p => p.id === activeProfileId) || profiles[0];
+  }, [profiles, activeProfileId]);
 
   // Today's YYYY-MM-DD
   const todayStr = useMemo(() => {
@@ -38,10 +49,11 @@ export default function DietScreen() {
     return localDate.toISOString().split('T')[0];
   }, []);
 
-  // Today's meals list
+  // Today's scoped meals list
   const todayMeals = useMemo(() => {
-    return meals.filter((m) => m.date.startsWith(todayStr));
-  }, [meals, todayStr]);
+    if (!activeProfile) return [];
+    return meals.filter((m) => m.profileId === activeProfile.id && m.date.startsWith(todayStr));
+  }, [meals, todayStr, activeProfile]);
 
   // Today's total protein
   const totalProtein = useMemo(() => {
@@ -55,6 +67,7 @@ export default function DietScreen() {
 
   // Quick Log helper
   const handleQuickAdd = (helper: typeof FILIPINO_HELPERS[0]) => {
+    if (!activeProfile) return;
     // Automatically determine meal type based on current time
     const currentHour = new Date().getHours();
     let autoMealType: typeof selectedMealType = 'snack';
@@ -73,6 +86,7 @@ export default function DietScreen() {
 
   // Custom meal submit
   const handleAddCustomMeal = () => {
+    if (!activeProfile) return;
     if (!foodName.trim()) {
       Alert.alert('Invalid Input', 'Please enter a food name.');
       return;
@@ -102,84 +116,199 @@ export default function DietScreen() {
 
   return (
     <SafeAreaView style={tw`flex-1 ${isDark ? 'bg-gray-950' : 'bg-gray-50'}`}>
-      <ScrollView contentContainerStyle={tw`p-4 pb-12`}>
-        {/* Diet Progress Summary */}
-        <View style={tw`mb-6 p-4 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
-          <Text style={tw`text-lg font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Today's Nutrition Summary
-          </Text>
-          
-          <View style={tw`flex-row justify-between mb-4`}>
-            <View style={tw`flex-1 mr-4 bg-gray-950/20 p-3 rounded-xl`}>
-              <Text style={tw`text-[11px] font-bold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                PROTEIN INTAKE
-              </Text>
-              <Text style={tw`text-xl font-black text-blue-500 mt-1`}>
-                {totalProtein} <Text style={tw`text-xs font-bold`}>/ 120-140 g</Text>
-              </Text>
-              <Text style={tw`text-[10px] mt-1 ${totalProtein >= 120 ? 'text-emerald-500 font-semibold' : 'text-gray-500'}`}>
-                {totalProtein >= 120 ? 'Target met!' : `${Math.max(0, 120 - totalProtein)}g left`}
-              </Text>
-            </View>
-
-            <View style={tw`flex-1 bg-gray-950/20 p-3 rounded-xl`}>
-              <Text style={tw`text-[11px] font-bold ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                TOTAL CALORIES
-              </Text>
-              <Text style={tw`text-xl font-black text-amber-500 mt-1`}>
-                {totalCalories} <Text style={tw`text-xs font-bold`}>kcal</Text>
-              </Text>
-              <Text style={tw`text-[10px] text-gray-500 mt-1`}>
-                Clean Filipino diet focus
-              </Text>
-            </View>
+      <ScrollView contentContainerStyle={tw`p-5 pb-10`}>
+        {/* Header */}
+        <View style={tw`flex-row justify-between items-center mb-6`}>
+          <View>
+            <Text style={tw`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Diet Tracker
+            </Text>
+            <Text style={tw`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Track macros and hit your goals
+            </Text>
           </View>
-
-          {/* Progress Bar */}
-          <View style={tw`w-full h-3 rounded-full ${isDark ? 'bg-gray-800' : 'bg-gray-200'} overflow-hidden`}>
-            <View
-              style={tw`h-full rounded-full ${
-                totalProtein >= 140
-                  ? 'bg-amber-500'
-                  : totalProtein >= 120
-                  ? 'bg-emerald-500'
-                  : 'bg-blue-500'
-              } w-[${Math.min(100, Math.round((totalProtein / 120) * 100))}%]`}
-            />
-          </View>
+          <TouchableOpacity
+            onPress={() => setShowCustomForm(!showCustomForm)}
+            style={tw`bg-blue-600/10 border border-blue-500/20 px-3.5 py-2.5 rounded-2xl flex-row items-center`}
+          >
+            <MaterialIcons name={showCustomForm ? 'close' : 'add'} size={16} color="#3B82F6" style={tw`mr-1`} />
+            <Text style={tw`text-blue-500 font-bold text-xs`}>
+              {showCustomForm ? 'Cancel' : 'Log Food'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Filipino Diet Helpers */}
-        <View style={tw`mb-6 p-4 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
-          <Text style={tw`text-base font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Filipino Diet Quick Log
-          </Text>
-          <Text style={tw`text-xs mb-4 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            Tap items to log immediately based on your diet guide
-          </Text>
+        {/* Dynamic Progress Card */}
+        {activeProfile && (
+          <View style={tw`mb-6 p-5 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+            <Text style={tw`text-base font-extrabold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
+              Today's Targets Summary
+            </Text>
+            
+            {/* Protein bar */}
+            <View style={tw`mb-4`}>
+              <View style={tw`flex-row justify-between mb-1.5`}>
+                <Text style={tw`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Protein Intake
+                </Text>
+                <Text style={tw`text-sm font-bold text-blue-500`}>
+                  {totalProtein}g / {activeProfile.proteinGoal}g
+                </Text>
+              </View>
+              <View style={tw`w-full h-3 bg-gray-200 ${isDark ? 'bg-gray-800' : 'bg-gray-200'} rounded-full overflow-hidden`}>
+                <View 
+                  style={[
+                    tw`h-full bg-blue-600 rounded-full`, 
+                    { width: `${Math.min(100, (totalProtein / activeProfile.proteinGoal) * 100)}%` }
+                  ]} 
+                />
+              </View>
+            </View>
 
-          <View style={tw`flex-row flex-wrap gap-2`}>
-            {FILIPINO_HELPERS.map((helper) => (
-              <TouchableOpacity
-                key={helper.name}
-                onPress={() => handleQuickAdd(helper)}
-                style={tw`w-[48%] flex-row items-center p-3 rounded-xl border ${
-                  isDark ? 'border-gray-800 bg-gray-950' : 'border-gray-200 bg-gray-100'
+            {/* Calories bar */}
+            <View>
+              <View style={tw`flex-row justify-between mb-1.5`}>
+                <Text style={tw`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Energy Intake
+                </Text>
+                <Text style={tw`text-sm font-bold text-orange-500`}>
+                  {totalCalories} kcal / {activeProfile.caloriesGoal} kcal
+                </Text>
+              </View>
+              <View style={tw`w-full h-3 bg-gray-200 ${isDark ? 'bg-gray-800' : 'bg-gray-200'} rounded-full overflow-hidden`}>
+                <View 
+                  style={[
+                    tw`h-full bg-orange-500 rounded-full`, 
+                    { width: `${Math.min(100, (totalCalories / activeProfile.caloriesGoal) * 100)}%` }
+                  ]} 
+                />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Custom Meal Form */}
+        {showCustomForm && (
+          <View style={tw`mb-6 p-5 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} border ${isDark ? 'border-gray-800' : 'border-gray-100'} shadow-sm`}>
+            <Text style={tw`text-base font-extrabold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
+              Log Custom Food
+            </Text>
+
+            <View style={tw`mb-3`}>
+              <Text style={tw`text-xs font-bold mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Food Name *
+              </Text>
+              <TextInput
+                placeholder="e.g. Fried Chicken"
+                placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                value={foodName}
+                onChangeText={setFoodName}
+                style={tw`p-2.5 rounded-lg border text-sm ${
+                  isDark ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'
                 }`}
+              />
+            </View>
+
+            <View style={tw`flex-row gap-2 mb-3`}>
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-xs font-bold mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Protein (g) *
+                </Text>
+                <TextInput
+                  placeholder="20"
+                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                  keyboardType="numeric"
+                  value={proteinInput}
+                  onChangeText={setProteinInput}
+                  style={tw`p-2.5 rounded-lg border text-sm ${
+                    isDark ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'
+                  }`}
+                />
+              </View>
+
+              <View style={tw`flex-1`}>
+                <Text style={tw`text-xs font-bold mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Calories (kcal)
+                </Text>
+                <TextInput
+                  placeholder="150"
+                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                  keyboardType="numeric"
+                  value={caloriesInput}
+                  onChangeText={setCaloriesInput}
+                  style={tw`p-2.5 rounded-lg border text-sm ${
+                    isDark ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'
+                  }`}
+                />
+              </View>
+            </View>
+
+            <View style={tw`mb-4`}>
+              <Text style={tw`text-xs font-bold mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Meal Type
+              </Text>
+              <View style={tw`flex-row gap-1`}>
+                {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((type) => {
+                  const active = selectedMealType === type;
+                  return (
+                    <TouchableOpacity
+                      key={type}
+                      onPress={() => setSelectedMealType(type)}
+                      style={tw`flex-1 py-2 rounded-lg border items-center capitalize ${
+                        active 
+                          ? 'bg-blue-600 border-blue-600' 
+                          : isDark ? 'border-gray-800 bg-gray-950' : 'border-gray-200 bg-gray-100'
+                      }`}
+                    >
+                      <Text style={tw`text-[11px] font-bold ${
+                        active ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-600'
+                      }`}>
+                        {type}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={handleAddCustomMeal}
+              style={tw`bg-blue-600 p-3 rounded-xl items-center flex-row justify-center`}
+            >
+              <MaterialIcons name="done" size={18} color="#FFFFFF" style={tw`mr-1`} />
+              <Text style={tw`text-white font-bold text-sm`}>
+                Save Meal Entry
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Quick Log Panel */}
+        <View style={tw`mb-6 p-5 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+          <Text style={tw`text-base font-extrabold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}>
+            Filipino Staples Quick-Log
+          </Text>
+          <Text style={tw`text-xs text-gray-500 mb-4`}>
+            Tap to instantly log typical portions. Auto-detects breakfast, lunch, or dinner time.
+          </Text>
+          <View style={tw`flex-row flex-wrap gap-2`}>
+            {FILIPINO_HELPERS.map((item) => (
+              <TouchableOpacity
+                key={item.name}
+                onPress={() => handleQuickAdd(item)}
+                style={tw`flex-row items-center p-2.5 rounded-xl border ${
+                  isDark ? 'border-gray-800 bg-gray-950' : 'border-gray-200 bg-gray-50'
+                } w-[48%]`}
               >
-                <View style={tw`p-1.5 rounded-lg bg-blue-500/10 mr-2.5`}>
-                  <MaterialIcons
-                    name={helper.icon as any}
-                    size={16}
-                    color="#3B82F6"
-                  />
+                <View style={tw`w-7 h-7 rounded-full bg-blue-500/10 items-center justify-center mr-2`}>
+                  <MaterialIcons name={item.icon as any} size={16} color="#3B82F6" />
                 </View>
                 <View style={tw`flex-1`}>
-                  <Text style={tw`text-xs font-bold ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
-                    {helper.name}
+                  <Text style={tw`text-[11px] font-bold ${isDark ? 'text-gray-300' : 'text-gray-800'}`} numberOfLines={1}>
+                    {item.name}
                   </Text>
-                  <Text style={tw`text-[10px] text-gray-500`}>
-                    {helper.protein}g protein | {helper.calories}c
+                  <Text style={tw`text-[9px] text-gray-500 font-medium`}>
+                    +{item.protein}g protein | {item.calories} kcal
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -187,127 +316,11 @@ export default function DietScreen() {
           </View>
         </View>
 
-        {/* Log Custom Meal Toggle & Form */}
-        <View style={tw`mb-6`}>
-          <TouchableOpacity
-            onPress={() => setShowCustomForm(!showCustomForm)}
-            style={tw`flex-row justify-between items-center p-4 rounded-2xl border ${
-              isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'
-            }`}
-          >
-            <View style={tw`flex-row items-center`}>
-              <MaterialIcons name="add-circle-outline" size={20} color="#3B82F6" style={tw`mr-2`} />
-              <Text style={tw`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                Log Custom Food / Meal
-              </Text>
-            </View>
-            <MaterialIcons
-              name={showCustomForm ? 'expand-less' : 'expand-more'}
-              size={20}
-              color={isDark ? '#9CA3AF' : '#4B5563'}
-            />
-          </TouchableOpacity>
-
-          {showCustomForm && (
-            <View style={tw`mt-2 p-4 rounded-2xl border ${
-              isDark ? 'border-gray-800 bg-gray-900' : 'border-gray-200 bg-white'
-            }`}>
-              <View style={tw`mb-3`}>
-                <Text style={tw`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Food Name *
-                </Text>
-                <TextInput
-                  placeholder="e.g. Grilled Salmon"
-                  placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                  value={foodName}
-                  onChangeText={setFoodName}
-                  style={tw`p-2.5 rounded-lg border text-sm ${
-                    isDark ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'
-                  }`}
-                />
-              </View>
-
-              <View style={tw`flex-row gap-2 mb-3`}>
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Protein (g) *
-                  </Text>
-                  <TextInput
-                    placeholder="20"
-                    placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                    keyboardType="numeric"
-                    value={proteinInput}
-                    onChangeText={setProteinInput}
-                    style={tw`p-2.5 rounded-lg border text-sm ${
-                      isDark ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'
-                    }`}
-                  />
-                </View>
-
-                <View style={tw`flex-1`}>
-                  <Text style={tw`text-xs font-bold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Calories (kcal)
-                  </Text>
-                  <TextInput
-                    placeholder="150"
-                    placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                    keyboardType="numeric"
-                    value={caloriesInput}
-                    onChangeText={setCaloriesInput}
-                    style={tw`p-2.5 rounded-lg border text-sm ${
-                      isDark ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'
-                    }`}
-                  />
-                </View>
-              </View>
-
-              <View style={tw`mb-4`}>
-                <Text style={tw`text-xs font-bold mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Meal Type
-                </Text>
-                <View style={tw`flex-row gap-1`}>
-                  {(['breakfast', 'lunch', 'dinner', 'snack'] as const).map((type) => {
-                    const active = selectedMealType === type;
-                    return (
-                      <TouchableOpacity
-                        key={type}
-                        onPress={() => setSelectedMealType(type)}
-                        style={tw`flex-1 py-2 rounded-lg border items-center capitalize ${
-                          active 
-                            ? 'bg-blue-600 border-blue-600' 
-                            : isDark ? 'border-gray-800 bg-gray-950' : 'border-gray-200 bg-gray-100'
-                        }`}
-                      >
-                        <Text style={tw`text-[11px] font-bold ${
-                          active ? 'text-white' : isDark ? 'text-gray-400' : 'text-gray-600'
-                        }`}>
-                          {type}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <TouchableOpacity
-                onPress={handleAddCustomMeal}
-                style={tw`bg-blue-600 p-3 rounded-xl items-center flex-row justify-center`}
-              >
-                <MaterialIcons name="add" size={18} color="#FFFFFF" style={tw`mr-1`} />
-                <Text style={tw`text-white font-bold text-sm`}>
-                  Log Custom Food
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {/* Today's Logged Foods List */}
-        <View style={tw`p-4 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
-          <Text style={tw`text-base font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Today's Logged Food
+        {/* Logged Foods List */}
+        <View style={tw`p-5 rounded-2xl ${isDark ? 'bg-gray-900' : 'bg-white'} shadow-sm`}>
+          <Text style={tw`text-base font-extrabold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
+            Today's Logged Foods
           </Text>
-
           {todayMeals.length > 0 ? (
             todayMeals.map((meal) => (
               <View
@@ -316,30 +329,35 @@ export default function DietScreen() {
                   isDark ? 'border-gray-800' : 'border-gray-100'
                 } last:border-b-0`}
               >
-                <View style={tw`flex-1 pr-4`}>
-                  <View style={tw`flex-row items-center`}>
-                    <Text style={tw`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                <View style={tw`flex-row items-center flex-1 pr-4`}>
+                  <View style={tw`w-8 h-8 rounded-full bg-gray-200 ${isDark ? 'bg-gray-850' : 'bg-gray-150'} items-center justify-center mr-3`}>
+                    <MaterialIcons 
+                      name={
+                        meal.mealType === 'breakfast' ? 'free-breakfast' :
+                        meal.mealType === 'lunch' ? 'lunch-dining' :
+                        meal.mealType === 'dinner' ? 'restaurant' : 'local-pizza'
+                      } 
+                      size={16} 
+                      color={isDark ? '#9CA3AF' : '#4B5563'} 
+                    />
+                  </View>
+                  <View style={tw`flex-1`}>
+                    <Text style={tw`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>
                       {meal.name}
                     </Text>
-                    <View style={tw`ml-2 px-1.5 py-0.5 rounded bg-blue-500/10`}>
-                      <Text style={tw`text-[9px] font-bold text-blue-500 capitalize`}>
-                        {meal.mealType}
-                      </Text>
-                    </View>
+                    <Text style={tw`text-[10px] text-gray-500 capitalize`}>
+                      {meal.mealType} | +{meal.protein}g protein | {meal.calories} kcal
+                    </Text>
                   </View>
-                  <Text style={tw`text-[11px] text-gray-500 mt-0.5`}>
-                    {meal.protein}g protein | {meal.calories} kcal
-                  </Text>
                 </View>
-                
-                <TouchableOpacity onPress={() => deleteMeal(meal.id)}>
-                  <MaterialIcons name="delete-outline" size={18} color="#EF4444" />
+                <TouchableOpacity onPress={() => deleteMeal(meal.id)} style={tw`p-1`}>
+                  <MaterialIcons name="delete-outline" size={20} color="#EF4444" />
                 </TouchableOpacity>
               </View>
             ))
           ) : (
-            <Text style={tw`text-xs italic ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              No food logged yet for today. Start logging to track your protein target!
+            <Text style={tw`text-xs italic text-gray-500 text-center py-4`}>
+              No meals logged today yet.
             </Text>
           )}
         </View>
