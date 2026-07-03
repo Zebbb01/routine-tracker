@@ -248,13 +248,16 @@ export default function DietScreen() {
             <View>
               <TextInput
                 ref={aiInputRef}
-                placeholder="e.g. Lunch: 155 pesos sisig, 1 cup of rice"
+                multiline={true}
+                numberOfLines={3}
+                placeholder="e.g.&#10;Lunch: 155 pesos sisig&#10;1 cup of rice&#10;Nestle fresh milk"
                 placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                 value={aiInput}
                 onChangeText={setAiInput}
+                textAlignVertical="top"
                 style={tw`p-3 rounded-xl border text-sm bg-white ${
                   isDark ? 'bg-gray-950 border-gray-800 text-white' : 'border-gray-200 text-gray-900'
-                } mb-3`}
+                } mb-3 min-h-18 text-left`}
               />
               <TouchableOpacity
                 onPress={handleAIAnalyze}
@@ -320,8 +323,8 @@ export default function DietScreen() {
 
                 <TouchableOpacity
                   onPress={() => {
-                    // Append a comma and space for listing additional foods
-                    setAiInput(prev => prev ? `${prev}, ` : '');
+                    // Append a newline for listing additional foods on a new line
+                    setAiInput(prev => prev ? `${prev}\n` : '');
                     setAiResult(null);
                     setTimeout(() => {
                       aiInputRef.current?.focus();
