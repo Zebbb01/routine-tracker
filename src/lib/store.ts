@@ -76,6 +76,25 @@ interface AppState {
   toast: { message: string; type: 'success' | 'error' | 'info' } | null;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
   hideToast: () => void;
+
+  // Dialog actions
+  dialog: {
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+  } | null;
+  showDialog: (config: {
+    title: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+  }) => void;
+  hideDialog: () => void;
 }
 
 // Helpers for default seeding
@@ -137,6 +156,7 @@ export const useAppStore = create<AppState>()(
       metrics: [],
       syncQueue: [],
       toast: null,
+      dialog: null,
 
       createProfile: (profileData) => {
         const id = generateUUID();
@@ -453,6 +473,14 @@ export const useAppStore = create<AppState>()(
 
       hideToast: () => {
         set({ toast: null });
+      },
+
+      showDialog: (config) => {
+        set({ dialog: config });
+      },
+
+      hideDialog: () => {
+        set({ dialog: null });
       },
 
       addToSyncQueue: (table, action, recordId, data) => {

@@ -19,7 +19,8 @@ export default function WorkoutsScreen() {
     deleteWorkout,
     addWorkoutSplit,
     deleteWorkoutSplit,
-    updateWorkoutSplit
+    updateWorkoutSplit,
+    showDialog
   } = useAppStore();
   
   const [selectedSplitId, setSelectedSplitId] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export default function WorkoutsScreen() {
     if (!activeProfileId) return;
     const reps = parseInt(repsInput);
     if (isNaN(reps) || reps <= 0) {
-      Alert.alert('Invalid Input', 'Please enter a valid number of reps.');
+      showDialog({ title: 'Invalid Input', message: 'Please enter a valid number of reps.' });
       return;
     }
 
@@ -130,11 +131,11 @@ export default function WorkoutsScreen() {
 
   const handleSaveSplit = () => {
     if (!splitNameInput.trim()) {
-      Alert.alert('Required', 'Please enter a split name.');
+      showDialog({ title: 'Required', message: 'Please enter a split name.' });
       return;
     }
     if (splitDaysInput.length === 0) {
-      Alert.alert('Required', 'Please select at least one schedule day.');
+      showDialog({ title: 'Required', message: 'Please select at least one schedule day.' });
       return;
     }
 
@@ -155,7 +156,7 @@ export default function WorkoutsScreen() {
       });
 
     if (exercises.length === 0) {
-      Alert.alert('Required', 'Please enter at least one exercise.');
+      showDialog({ title: 'Required', message: 'Please enter at least one exercise.' });
       return;
     }
 
@@ -271,21 +272,15 @@ export default function WorkoutsScreen() {
               </Text>
               <TouchableOpacity 
                 onPress={() => {
-                  Alert.alert(
-                    'Delete Split',
-                    `Are you sure you want to delete "${selectedSplit.name}"?`,
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      { 
-                        text: 'Delete', 
-                        style: 'destructive',
-                        onPress: () => {
-                          deleteWorkoutSplit(selectedSplit.id);
-                          setSelectedSplitId(null);
-                        } 
-                      }
-                    ]
-                  );
+                  showDialog({
+                    title: 'Delete Split',
+                    message: `Are you sure you want to delete "${selectedSplit.name}"?`,
+                    confirmText: 'Delete',
+                    onConfirm: () => {
+                      deleteWorkoutSplit(selectedSplit.id);
+                      setSelectedSplitId(null);
+                    }
+                  });
                 }}
                 style={tw`flex-row items-center`}
               >

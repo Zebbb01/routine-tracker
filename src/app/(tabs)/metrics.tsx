@@ -22,7 +22,8 @@ export default function MetricsScreen() {
     metrics,
     addMetric,
     deleteMetric,
-    showToast
+    showToast,
+    showDialog
   } = useAppStore();
 
   const [weightInput, setWeightInput] = useState('');
@@ -103,7 +104,7 @@ export default function MetricsScreen() {
     const pushups = parseInt(pushupsInput);
 
     if (isNaN(weight) && isNaN(waist) && isNaN(pushups)) {
-      Alert.alert('Empty Inputs', 'Please log at least one metric (Weight, Waist, or Push-ups).');
+      showDialog({ title: 'Empty Inputs', message: 'Please log at least one metric (Weight, Waist, or Push-ups).' });
       return;
     }
 

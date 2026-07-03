@@ -28,7 +28,8 @@ export default function DietScreen() {
     meals,
     addMeal,
     deleteMeal,
-    showToast
+    showToast,
+    showDialog
   } = useAppStore();
 
   // Custom meal input states
@@ -95,14 +96,14 @@ export default function DietScreen() {
   const handleAddCustomMeal = () => {
     if (!activeProfile) return;
     if (!foodName.trim()) {
-      Alert.alert('Invalid Input', 'Please enter a food name.');
+      showDialog({ title: 'Invalid Input', message: 'Please enter a food name.' });
       return;
     }
     const protein = parseFloat(proteinInput);
     const calories = parseInt(caloriesInput);
 
     if (isNaN(protein) || protein < 0) {
-      Alert.alert('Invalid Input', 'Please enter a valid protein amount.');
+      showDialog({ title: 'Invalid Input', message: 'Please enter a valid protein amount.' });
       return;
     }
 
@@ -123,7 +124,7 @@ export default function DietScreen() {
   // AI Meal Analysis
   const handleAIAnalyze = async () => {
     if (!aiInput.trim()) {
-      Alert.alert('Required', 'Please describe your meal first.');
+      showDialog({ title: 'Required', message: 'Please describe your meal first.' });
       return;
     }
     setAiLoading(true);
@@ -132,10 +133,10 @@ export default function DietScreen() {
       if (result) {
         setAiResult(result);
       } else {
-        Alert.alert('AI Error', 'Could not analyze this meal. Please verify internet connection.');
+        showDialog({ title: 'AI Error', message: 'Could not analyze this meal. Please verify internet connection.' });
       }
     } catch (e) {
-      Alert.alert('AI Error', 'An error occurred during estimation.');
+      showDialog({ title: 'AI Error', message: 'An error occurred during estimation.' });
     } finally {
       setAiLoading(false);
     }
