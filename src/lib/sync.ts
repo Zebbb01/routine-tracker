@@ -44,23 +44,26 @@ async function syncQueueItem(item: SyncQueueItem): Promise<boolean> {
 // Main sync function
 export async function runSync() {
   if (isSyncing) return;
+  isSyncing = true; // Lock immediately to prevent race conditions
+
   if (!isSupabaseConfigured || !supabase) {
     console.log('Sync skipped: Supabase not configured.');
+    isSyncing = false;
     return;
   }
-
-  const state = await NetInfo.fetch();
-  const isOnline = state.isConnected ?? true; // Fallback to true if unknown
-
-  if (!isOnline) {
-    console.log('Sync skipped: Device is offline.');
-    return;
-  }
-
-  isSyncing = true;
-  console.log('Sync started...');
 
   try {
+    const state = await NetInfo.fetch();
+    const isOnline = state.isConnected ?? true; // Fallback to true if unknown
+
+    if (!isOnline) {
+      console.log('Sync skipped: Device is offline.');
+      isSyncing = false;
+      return;
+    }
+
+    console.log('Sync started...');
+
     const store = useAppStore.getState();
     const queue = [...store.syncQueue];
 
