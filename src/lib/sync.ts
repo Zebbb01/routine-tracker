@@ -158,14 +158,21 @@ export async function runSync() {
   }
 }
 
+let lastIsConnected: boolean | null = null;
+
 // Initialize sync listener
 export function initSyncListener() {
   // Listen for connectivity changes
   NetInfo.addEventListener((state) => {
-    if (state.isConnected) {
+    const isConnected = !!state.isConnected;
+    
+    // Only trigger sync if we transitioned from offline to online
+    if (isConnected && lastIsConnected === false) {
       console.log('Network connected. Triggering sync...');
       runSync();
     }
+    
+    lastIsConnected = isConnected;
   });
 
   // Run initial sync on startup
