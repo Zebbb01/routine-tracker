@@ -17,9 +17,11 @@ export default function RootLayout() {
     // Hide splash screen after initialization
     SplashScreen.hideAsync();
 
-    // Start background sync listener
+    // Start background sync listener exactly once on app mount
     initSyncListener();
+  }, []);
 
+  useEffect(() => {
     // Seed default profile if none exists
     if (profiles.length === 0) {
       createProfile({
@@ -30,7 +32,7 @@ export default function RootLayout() {
         caloriesGoal: 2200,
       });
     }
-  }, [profiles]);
+  }, [profiles, createProfile]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
