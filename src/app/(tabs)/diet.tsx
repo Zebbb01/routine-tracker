@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, useColorScheme, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, useColorScheme, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
 import { useAppStore } from '@/lib/store';
 import { MaterialIcons } from '@expo/vector-icons';
+import { analyzeMealWithAI, AIAnalysisResult } from '@/lib/ai';
 
 // Filipino helper quick-add list
 const FILIPINO_HELPERS = [
@@ -35,6 +36,11 @@ export default function DietScreen() {
   const [caloriesInput, setCaloriesInput] = useState('');
   const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('breakfast');
   const [showCustomForm, setShowCustomForm] = useState(false);
+
+  // AI assistant states
+  const [aiInput, setAiInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null);
 
   // Active Profile details
   const activeProfile = useMemo(() => {
@@ -68,7 +74,6 @@ export default function DietScreen() {
   // Quick Log helper
   const handleQuickAdd = (helper: typeof FILIPINO_HELPERS[0]) => {
     if (!activeProfile) return;
-    // Automatically determine meal type based on current time
     const currentHour = new Date().getHours();
     let autoMealType: typeof selectedMealType = 'snack';
     if (currentHour >= 6 && currentHour < 11) autoMealType = 'breakfast';
@@ -107,11 +112,49 @@ export default function DietScreen() {
       date: new Date().toISOString()
     });
 
-    // Reset fields
     setFoodName('');
     setProteinInput('');
     setCaloriesInput('');
     setShowCustomForm(false);
+  };
+
+  // AI Meal Analysis
+  const handleAIAnalyze = async () => {
+    if (!aiInput.trim()) {
+      Alert.alert('Required', 'Please describe your meal first.');
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const result = await analyzeMealWithAI(aiInput);
+      if (result) {
+        setAiResult(result);
+      } else {
+        Alert.alert('AI Error', 'Could not analyze this meal. Please verify internet connection.');
+      }
+    } catch (e) {
+      Alert.alert('AI Error', 'An error occurred during estimation.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // Confirm and log AI results
+  const handleConfirmAILog = () => {
+    if (!aiResult || !activeProfile) return;
+    
+    addMeal({
+      name: aiResult.foodName,
+      protein: aiResult.protein,
+      calories: aiResult.calories,
+      mealType: aiResult.mealType,
+      date: new Date().toISOString()
+    });
+
+    // Reset AI state
+    setAiInput('');
+    setAiResult(null);
+    Alert.alert('Logged!', 'Meal details added successfully via AI.');
   };
 
   return (
@@ -186,6 +229,118 @@ export default function DietScreen() {
             </View>
           </View>
         )}
+
+        {/* AI MEAL ASSISTANT CARD */}
+        <View style={tw`mb-6 p-5 rounded-2xl bg-gradient-to-br ${isDark ? 'from-blue-950 to-slate-900 border border-blue-900/30' : 'from-blue-50 to-indigo-100/50 border border-blue-100'} shadow-sm`}>
+          <View style={tw`flex-row items-center mb-3.5`}>
+            <MaterialIcons name="psychology" size={24} color="#3B82F6" style={tw`mr-2`} />
+            <Text style={tw`text-base font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              AI Meal Assistant
+            </Text>
+          </View>
+          
+          <Text style={tw`text-xs text-gray-500 mb-3`}>
+            Type what you ate in plain English. AI estimates the protein, calories, and checks if you need to log anything else.
+          </Text>
+
+          {!aiResult ? (
+            <View>
+              <TextInput
+                placeholder="e.g. Lunch: 155 pesos sisig, 1 cup of rice"
+                placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
+                value={aiInput}
+                onChangeText={setAiInput}
+                style={tw`p-3 rounded-xl border text-sm bg-white ${
+                  isDark ? 'bg-gray-950 border-gray-800 text-white' : 'border-gray-200 text-gray-900'
+                } mb-3`}
+              />
+              <TouchableOpacity
+                onPress={handleAIAnalyze}
+                disabled={aiLoading}
+                style={tw`bg-blue-600 p-3 rounded-xl items-center flex-row justify-center`}
+              >
+                {aiLoading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <MaterialIcons name="auto-awesome" size={18} color="#FFFFFF" style={tw`mr-1.5`} />
+                    <Text style={tw`text-white font-bold text-sm`}>Estimate & Log</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={tw`bg-white ${isDark ? 'bg-gray-950 border border-gray-800' : 'border border-gray-200'} p-4 rounded-xl`}>
+              <Text style={tw`text-xs font-bold text-blue-500 mb-2 uppercase`}>
+                AI Estimation
+              </Text>
+              
+              <Text style={tw`text-sm font-extrabold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
+                {aiResult.foodName}
+              </Text>
+
+              <View style={tw`flex-row gap-3 mb-4`}>
+                <View style={tw`bg-blue-500/10 px-2.5 py-1 rounded-lg`}>
+                  <Text style={tw`text-xs font-bold text-blue-500`}>
+                    Protein: {aiResult.protein}g
+                  </Text>
+                </View>
+                <View style={tw`bg-orange-500/10 px-2.5 py-1 rounded-lg`}>
+                  <Text style={tw`text-xs font-bold text-orange-500`}>
+                    Calories: {aiResult.calories} kcal
+                  </Text>
+                </View>
+                <View style={tw`bg-purple-500/10 px-2.5 py-1 rounded-lg`}>
+                  <Text style={tw`text-xs font-bold text-purple-500 capitalize`}>
+                    {aiResult.mealType}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Conversational follow up bubble */}
+              <View style={tw`p-3 bg-blue-500/10 rounded-xl mb-4`}>
+                <Text style={tw`text-xs font-bold text-blue-500 mb-1`}>
+                  Meal Assistant:
+                </Text>
+                <Text style={tw`text-xs italic ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  "{aiResult.followUp}"
+                </Text>
+              </View>
+
+              <View style={tw`flex-row gap-2`}>
+                <TouchableOpacity
+                  onPress={handleConfirmAILog}
+                  style={tw`flex-1 bg-emerald-600 p-2.5 rounded-lg items-center flex-row justify-center`}
+                >
+                  <MaterialIcons name="check" size={16} color="#FFFFFF" style={tw`mr-1`} />
+                  <Text style={tw`text-white text-xs font-bold`}>Log This</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    // Feed follow up question into prompt for easy responses
+                    setAiInput(prev => `${prev}. Also: `);
+                    setAiResult(null);
+                  }}
+                  style={tw`flex-1 bg-blue-600 p-2.5 rounded-lg items-center flex-row justify-center`}
+                >
+                  <MaterialIcons name="reply" size={16} color="#FFFFFF" style={tw`mr-1`} />
+                  <Text style={tw`text-white text-xs font-bold`}>Reply / Add More</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setAiResult(null);
+                    setAiInput('');
+                  }}
+                  style={tw`bg-red-500/10 px-3 rounded-lg items-center justify-center`}
+                >
+                  <MaterialIcons name="delete" size={18} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
 
         {/* Custom Meal Form */}
         {showCustomForm && (
@@ -330,7 +485,7 @@ export default function DietScreen() {
                 } last:border-b-0`}
               >
                 <View style={tw`flex-row items-center flex-1 pr-4`}>
-                  <View style={tw`w-8 h-8 rounded-full bg-gray-200 ${isDark ? 'bg-gray-850' : 'bg-gray-150'} items-center justify-center mr-3`}>
+                  <View style={tw`w-8 h-8 rounded-full bg-gray-200 ${isDark ? 'bg-gray-800' : 'bg-gray-150'} items-center justify-center mr-3`}>
                     <MaterialIcons 
                       name={
                         meal.mealType === 'breakfast' ? 'free-breakfast' :
