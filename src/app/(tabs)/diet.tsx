@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, useColorScheme, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
@@ -38,6 +38,7 @@ export default function DietScreen() {
   const [showCustomForm, setShowCustomForm] = useState(false);
 
   // AI assistant states
+  const aiInputRef = useRef<TextInput>(null);
   const [aiInput, setAiInput] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<AIAnalysisResult | null>(null);
@@ -246,6 +247,7 @@ export default function DietScreen() {
           {!aiResult ? (
             <View>
               <TextInput
+                ref={aiInputRef}
                 placeholder="e.g. Lunch: 155 pesos sisig, 1 cup of rice"
                 placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
                 value={aiInput}
@@ -318,9 +320,12 @@ export default function DietScreen() {
 
                 <TouchableOpacity
                   onPress={() => {
-                    // Feed follow up question into prompt for easy responses
-                    setAiInput(prev => `${prev}. Also: `);
+                    // Append a comma and space for listing additional foods
+                    setAiInput(prev => prev ? `${prev}, ` : '');
                     setAiResult(null);
+                    setTimeout(() => {
+                      aiInputRef.current?.focus();
+                    }, 80);
                   }}
                   style={tw`flex-1 bg-blue-600 rounded-xl items-center flex-row justify-center h-11`}
                 >
