@@ -24,6 +24,16 @@ export async function analyzeMealWithAI(userInput: string): Promise<AIAnalysisRe
             role: 'system',
             content: `You are a fitness nutritionist assistant. The user will describe what they ate in natural language. 
 Estimate the total protein (in grams) and total calories (in kcal) for the foods. Identify the meal type (breakfast, lunch, dinner, or snack). 
+
+Be highly precise and accurate, especially with Filipino staples and specific brands:
+- Nestle Fresh Milk (Philippines): 8.8g protein and 160 kcal per 250ml cup.
+- 1 Cup of White Rice: 4g protein and 200 kcal.
+- Pork/Chicken Sisig (single portion): ~22g protein and ~400 kcal (excluding rice).
+- Wafello Choco (per small pack): ~1.5g protein and ~110 kcal.
+- Greek Yogurt (typical 100-125g): ~10g protein and ~120 kcal.
+- 1 Egg: 6g protein and 70 kcal.
+- Whey Protein (1 scoop): 25g protein and 120 kcal.
+
 Additionally, write a brief, friendly follow-up question (under 20 words, no emojis) asking if they ate snacks or drinks (e.g. "Did you have any snacks or milk after that?").
 
 You must return ONLY a valid JSON object matching this TypeScript interface, with no markdown formatting, backticks, or explanation:

@@ -310,7 +310,7 @@ export default function DietScreen() {
               <View style={tw`flex-row gap-2`}>
                 <TouchableOpacity
                   onPress={handleConfirmAILog}
-                  style={tw`flex-1 bg-emerald-600 p-2.5 rounded-lg items-center flex-row justify-center`}
+                  style={tw`flex-1 bg-emerald-600 rounded-xl items-center flex-row justify-center h-11`}
                 >
                   <MaterialIcons name="check" size={16} color="#FFFFFF" style={tw`mr-1`} />
                   <Text style={tw`text-white text-xs font-bold`}>Log This</Text>
@@ -322,7 +322,7 @@ export default function DietScreen() {
                     setAiInput(prev => `${prev}. Also: `);
                     setAiResult(null);
                   }}
-                  style={tw`flex-1 bg-blue-600 p-2.5 rounded-lg items-center flex-row justify-center`}
+                  style={tw`flex-1 bg-blue-600 rounded-xl items-center flex-row justify-center h-11`}
                 >
                   <MaterialIcons name="reply" size={16} color="#FFFFFF" style={tw`mr-1`} />
                   <Text style={tw`text-white text-xs font-bold`}>Reply / Add More</Text>
@@ -333,7 +333,7 @@ export default function DietScreen() {
                     setAiResult(null);
                     setAiInput('');
                   }}
-                  style={tw`bg-red-500/10 px-3 rounded-lg items-center justify-center`}
+                  style={tw`bg-red-500/10 px-4 rounded-xl items-center justify-center h-11`}
                 >
                   <MaterialIcons name="delete" size={18} color="#EF4444" />
                 </TouchableOpacity>
