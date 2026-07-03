@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, useColorScheme, SafeAreaView, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, useColorScheme, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
 import { useAppStore } from '@/lib/store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -221,7 +222,7 @@ export default function DietScreen() {
                   value={foodName}
                   onChangeText={setFoodName}
                   style={tw`p-2.5 rounded-lg border text-sm ${
-                    isDark ? 'bg-gray-950 border-gray-850 text-white' : 'bg-white border-gray-200 text-gray-900'
+                    isDark ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'
                   }`}
                 />
               </View>
@@ -238,7 +239,7 @@ export default function DietScreen() {
                     value={proteinInput}
                     onChangeText={setProteinInput}
                     style={tw`p-2.5 rounded-lg border text-sm ${
-                      isDark ? 'bg-gray-950 border-gray-850 text-white' : 'bg-white border-gray-200 text-gray-900'
+                      isDark ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'
                     }`}
                   />
                 </View>
@@ -254,7 +255,7 @@ export default function DietScreen() {
                     value={caloriesInput}
                     onChangeText={setCaloriesInput}
                     style={tw`p-2.5 rounded-lg border text-sm ${
-                      isDark ? 'bg-gray-950 border-gray-850 text-white' : 'bg-white border-gray-200 text-gray-900'
+                      isDark ? 'bg-gray-950 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'
                     }`}
                   />
                 </View>
@@ -274,7 +275,7 @@ export default function DietScreen() {
                         style={tw`flex-1 py-2 rounded-lg border items-center capitalize ${
                           active 
                             ? 'bg-blue-600 border-blue-600' 
-                            : isDark ? 'border-gray-850 bg-gray-950' : 'border-gray-200 bg-gray-100'
+                            : isDark ? 'border-gray-800 bg-gray-950' : 'border-gray-200 bg-gray-100'
                         }`}
                       >
                         <Text style={tw`text-[11px] font-bold ${

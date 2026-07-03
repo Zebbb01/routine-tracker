@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, useColorScheme, SafeAreaView, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, useColorScheme, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
 import { useAppStore } from '@/lib/store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -271,7 +272,7 @@ export default function DashboardScreen() {
                   <View style={tw`w-8 h-8 rounded-full items-center justify-center ${
                     completed 
                       ? 'bg-emerald-500/20' 
-                      : isDark ? 'bg-gray-850' : 'bg-gray-100'
+                      : isDark ? 'bg-gray-800' : 'bg-gray-100'
                   } mr-3`}>
                     <MaterialIcons
                       name={h.icon as any}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, useColorScheme, SafeAreaView, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, useColorScheme, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import tw from 'twrnc';
 import { useAppStore } from '@/lib/store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -216,7 +217,7 @@ export default function WorkoutsScreen() {
                   setNotesInput('');
                 }}
                 style={tw`p-4 flex-row justify-between items-center ${
-                  isExpanded ? (isDark ? 'bg-gray-850' : 'bg-gray-50') : 'bg-transparent'
+                  isExpanded ? (isDark ? 'bg-gray-800' : 'bg-gray-50') : 'bg-transparent'
                 }`}
               >
                 <View style={tw`flex-1 pr-4`}>
@@ -256,7 +257,7 @@ export default function WorkoutsScreen() {
                       {loggedSets.map((set) => (
                         <View 
                           key={set.id} 
-                          style={tw`flex-row justify-between items-center py-2 border-b border-gray-850 last:border-b-0`}
+                          style={tw`flex-row justify-between items-center py-2 border-b border-gray-800 last:border-b-0`}
                         >
                           <Text style={tw`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                             Set {set.sets}: {set.weight > 0 ? `${set.weight} kg x ` : ''}{set.reps} reps
@@ -288,7 +289,7 @@ export default function WorkoutsScreen() {
                         onChangeText={setWeightInput}
                         style={tw`p-2.5 rounded-lg border text-sm ${
                           isDark 
-                            ? 'bg-gray-950 border-gray-850 text-white' 
+                            ? 'bg-gray-950 border-gray-800 text-white' 
                             : 'bg-white border-gray-200 text-gray-900'
                         }`}
                       />
@@ -306,7 +307,7 @@ export default function WorkoutsScreen() {
                         onChangeText={setRepsInput}
                         style={tw`p-2.5 rounded-lg border text-sm ${
                           isDark 
-                            ? 'bg-gray-950 border-gray-850 text-white' 
+                            ? 'bg-gray-950 border-gray-800 text-white' 
                             : 'bg-white border-gray-200 text-gray-900'
                         }`}
                       />
@@ -324,7 +325,7 @@ export default function WorkoutsScreen() {
                       onChangeText={setNotesInput}
                       style={tw`p-2.5 rounded-lg border text-sm ${
                         isDark 
-                          ? 'bg-gray-950 border-gray-850 text-white' 
+                          ? 'bg-gray-950 border-gray-800 text-white' 
                           : 'bg-white border-gray-200 text-gray-900'
                       }`}
                     />
@@ -342,7 +343,7 @@ export default function WorkoutsScreen() {
 
                   {/* Rest Timer Presets inside card */}
                   <View style={tw`flex-row justify-between items-center mt-4 pt-3 border-t ${
-                    isDark ? 'border-gray-850' : 'border-gray-100'
+                    isDark ? 'border-gray-800' : 'border-gray-100'
                   }`}>
                     <Text style={tw`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       Rest Timer presets:
