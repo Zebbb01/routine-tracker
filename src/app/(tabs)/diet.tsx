@@ -27,7 +27,8 @@ export default function DietScreen() {
     activeProfileId,
     meals,
     addMeal,
-    deleteMeal
+    deleteMeal,
+    showToast
   } = useAppStore();
 
   // Custom meal input states
@@ -155,7 +156,7 @@ export default function DietScreen() {
     // Reset AI state
     setAiInput('');
     setAiResult(null);
-    Alert.alert('Logged!', 'Meal details added successfully via AI.');
+    showToast('Meal details logged successfully.');
   };
 
   return (
@@ -333,7 +334,7 @@ export default function DietScreen() {
                   style={tw`flex-1 bg-blue-600 rounded-xl items-center flex-row justify-center h-11`}
                 >
                   <MaterialIcons name="reply" size={16} color="#FFFFFF" style={tw`mr-1`} />
-                  <Text style={tw`text-white text-xs font-bold`}>Reply / Add More</Text>
+                  <Text style={tw`text-white text-xs font-bold`}>Reply</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

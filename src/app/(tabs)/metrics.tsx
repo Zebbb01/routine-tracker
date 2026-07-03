@@ -21,7 +21,8 @@ export default function MetricsScreen() {
     activeProfileId,
     metrics,
     addMetric,
-    deleteMetric
+    deleteMetric,
+    showToast
   } = useAppStore();
 
   const [weightInput, setWeightInput] = useState('');
@@ -120,7 +121,7 @@ export default function MetricsScreen() {
     
     // Auto switch to actual user data when they log something
     setUseDemoData(false);
-    Alert.alert('Logged!', 'Your metrics have been logged successfully.');
+    showToast('Metrics logged successfully.');
   };
 
   return (

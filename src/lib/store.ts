@@ -71,6 +71,11 @@ interface AppState {
     habits?: HabitLog[];
     metrics?: Metric[];
   }) => void;
+
+  // Toast actions
+  toast: { message: string; type: 'success' | 'error' | 'info' } | null;
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  hideToast: () => void;
 }
 
 // Helpers for default seeding
@@ -131,6 +136,7 @@ export const useAppStore = create<AppState>()(
       habits: [],
       metrics: [],
       syncQueue: [],
+      toast: null,
 
       createProfile: (profileData) => {
         const id = generateUUID();
@@ -439,6 +445,14 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           syncQueue: state.syncQueue.filter((item) => item.id !== queueId),
         }));
+      },
+
+      showToast: (message, type = 'success') => {
+        set({ toast: { message, type } });
+      },
+
+      hideToast: () => {
+        set({ toast: null });
       },
 
       addToSyncQueue: (table, action, recordId, data) => {
