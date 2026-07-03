@@ -1,7 +1,7 @@
--- Migration: Enable Row Level Security (RLS) & Policies
+-- Row Level Security (RLS) & Security Policies
 -- Date: 2026-07-03
 
--- Enable RLS
+-- Enable RLS on all tables
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE custom_habits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workout_splits ENABLE ROW LEVEL SECURITY;
@@ -19,7 +19,7 @@ DROP POLICY IF EXISTS "Allow public read/write on meals" ON meals;
 DROP POLICY IF EXISTS "Allow public read/write on habits" ON habits;
 DROP POLICY IF EXISTS "Allow public read/write on metrics" ON metrics;
 
--- Create Public Access Policies
+-- Create Public Access Policies (Personal Offline-First Sync Bypass)
 CREATE POLICY "Allow public read/write on profiles" ON profiles FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/write on custom_habits" ON custom_habits FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow public read/write on workout_splits" ON workout_splits FOR ALL USING (true) WITH CHECK (true);
