@@ -31,7 +31,6 @@ export default function MetricsScreen() {
   
   // Track which chart is selected
   const [selectedChartType, setSelectedChartType] = useState<'weight' | 'pushups' | 'waist'>('weight');
-  const [useDemoData, setUseDemoData] = useState(true);
 
   // Active Profile details
   const activeProfile = useMemo(() => {
@@ -79,7 +78,7 @@ export default function MetricsScreen() {
 
   // Decide if we should render demo data or user data
   const chartData = useMemo(() => {
-    if (userChartData && !useDemoData) {
+    if (userChartData) {
       return {
         labels: userChartData.labels,
         datasets: [{ data: userChartData.data }]
@@ -95,7 +94,7 @@ export default function MetricsScreen() {
       labels: DEMO_LABELS,
       datasets: [{ data: demoSet }]
     };
-  }, [userChartData, useDemoData, selectedChartType]);
+  }, [userChartData, selectedChartType]);
 
   const handleLogMetric = () => {
     if (!activeProfile) return;
@@ -119,8 +118,6 @@ export default function MetricsScreen() {
     setWaistInput('');
     setPushupsInput('');
     
-    // Auto switch to actual user data when they log something
-    setUseDemoData(false);
     showToast('Metrics logged successfully.');
   };
 
@@ -212,20 +209,11 @@ export default function MetricsScreen() {
                 Progress Visualization
               </Text>
               <Text style={tw`text-xs text-gray-500`}>
-                {useDemoData ? 'Showing 6-week target preview' : 'Showing your progress data'}
+                {userChartData 
+                  ? 'Showing your actual progress logs' 
+                  : 'Log at least 2 entries to unlock your chart (showing preview)'}
               </Text>
             </View>
-            
-            {userChartData && (
-              <TouchableOpacity
-                onPress={() => setUseDemoData(!useDemoData)}
-                style={tw`bg-blue-500/10 px-2.5 py-1.5 rounded-lg border border-blue-500/20`}
-              >
-                <Text style={tw`text-xs font-semibold text-blue-500`}>
-                  {useDemoData ? 'View My Data' : 'View Target'}
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
 
           {/* Chart Type Toggles */}
